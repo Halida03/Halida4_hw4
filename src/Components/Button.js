@@ -1,13 +1,17 @@
-import React from "react";
+import React, { Component } from "react";
 
-const Button = ({onclick}) => {
-    return (
-        <div className="todo-input-item"> 
-            <button className="primary-btn" type="button" onClick={onclick}>
-                Add
-            </button>
-        </div>
-    );
-};
+class Button extends Component {
+    render() {
+        const { onclick } = this.props;
+
+            return (
+                <div className="todo-input-item">
+                    <button className="primary-btn" type="button" onClick={onclick}>
+                        Add
+                    </button>
+                </div>
+        );
+    }
+}
 
 export default Button;

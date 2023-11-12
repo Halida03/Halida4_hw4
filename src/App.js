@@ -1,163 +1,187 @@
-import React from "react";
+import React, { Component } from "react";
 import "./App.css";
-import { useState } from "react";
 import Input from "./Components/input";
 import Button from "./Components/Button";
 import Switcher from "./Components/switcher";
 import Todoitem from "./Components/todoitem";
 import Clear from "./Components/clear";
 
+class App extends Component {
+  constructor(props) {
+    super(props);
 
-function App() {
-  const [newTodoTitle, setNewTodoTitle] = useState("");
-  const [newDescription, setNewDescription] = useState("");
-  const [allTodos, setAllTodos] = useState([]);  //[] - для данных 
-  const [viewMode, setViewMode] = useState("todo"); // статус выполнен/не выполнен
-  const [editTask, setEditTask] = useState({ id: null, text: "" });
-  const [TaskText, setTaskText] = useState("") ;
-  const [isEditing, setIsEditing] = useState(false);
-  const date = new Date();
+    const date = new Date();
 
-  const todoTasks = allTodos.filter((task) => !task.completed);
-  const completedTasks = allTodos.filter((task) => task.completed); 
+    this.state = {
+      newTodoTitle: "",
+      newDescription: "",
+      allTodos: [],
+      viewMode: "todo",
+      editTask: { id: null, text: "" },
+      TaskText: "",
+      isEditing: false,
+      date: date,
+    };
+  }
 
-  const addNewTask = () => {
+  addNewTask = () => {
+    const { newTodoTitle, newDescription, allTodos, date } = this.state;
+
     if (newTodoTitle.trim() !== "") {
-      const newTask = { 
-        title: newTodoTitle, 
+      const newTask = {
+        title: newTodoTitle,
         description: newDescription,
         id: date.getMilliseconds(),
       };
 
-      setAllTodos([...allTodos, newTask]);
-      setNewTodoTitle("");
-      setNewDescription("");
+      this.setState((prevState) => ({
+        allTodos: [...prevState.allTodos, newTask],
+        newTodoTitle: "",
+        newDescription: "",
+      }));
     }
-  }
-
-  const deleteTask = (id) =>{
-    setAllTodos(allTodos.filter((item) => item.id !== id));
-}
-
-  const clearAllTasks = () =>{
-    setAllTodos([]);
-  }
-
-  const switchToTodo = () => { //кнопки переключения 
-    setViewMode("todo");
-  }
-  
-  const switchToCompleted = () => {
-    setViewMode("completed");
-  }
-  
-  const taskCompleted = (taskId) => {
-    const updatedTodos = allTodos.map((task) => {
-      if (task.id === taskId) {
-        return { ...task, completed: !task.completed };
-      }
-      return task;
-    });
-  
-    setAllTodos(updatedTodos);
   };
 
-  const toggleEdit = (taskId, taskText) => {
-    setAllTodos((prevTodos) =>
-      prevTodos.map((task) =>
-        task.id === taskId ? { ...task, isEditing: !task.isEditing } : task
-      )
-    );
-    setEditTask((prevEditTask) =>
-      prevEditTask.id === taskId ? { id: null, text: "" } : { id: taskId, text: taskText }
-    );
-    setTaskText(taskText);
-  };  
-  
+  deleteTask = (id) => {
+    this.setState((prevState) => ({
+      allTodos: prevState.allTodos.filter((item) => item.id !== id),
+    }));
+  };
 
-  const saveChange = (taskId) => {
-    setAllTodos((prevTodos) =>
-      prevTodos.map((task) =>
+  clearAllTasks = () => {
+    this.setState({ allTodos: [] });
+  };
+
+  switchToTodo = () => {
+    this.setState({ viewMode: "todo" });
+  };
+
+  switchToCompleted = () => {
+    this.setState({ viewMode: "completed" });
+  };
+
+  taskCompleted = (taskId) => {
+    this.setState((prevState) => ({
+      allTodos: prevState.allTodos.map((task) =>
         task.id === taskId
-          ? { ...task, title: TaskText, isEditing: false }
+          ? { ...task, completed: !task.completed }
           : task
-      )
-    );
-    setTaskText("");
-    setEditTask({ id: null, text: "" }); 
-  };  
-  
+      ),
+    }));
+  };
 
+  toggleEdit = (taskId, taskText) => {
+    this.setState((prevState) => ({
+      allTodos: prevState.allTodos.map((task) =>
+        task.id === taskId
+          ? { ...task, isEditing: !task.isEditing }
+          : task
+      ),
+      editTask: prevState.editTask.id === taskId ? { id: null, text: "" } : { id: taskId, text: taskText },
+      TaskText: taskText,
+    }));
+  };
 
-  return (
-    <div className="App">
-      <h1>My Todos</h1>
+  saveChange = (taskId) => {
+    this.setState((prevState) => ({
+      allTodos: prevState.allTodos.map((task) =>
+        task.id === taskId
+          ? { ...task, title: prevState.TaskText, isEditing: false }
+          : task
+      ),
+      TaskText: "",
+      editTask: { id: null, text: "" },
+    }));
+  };
 
-      <div className="todo-wrapper">
-        <div className="todo-input"> 
-        
-        <Input
-          valueTitle={newTodoTitle}
-          valueDescription={newDescription}
-          onTitleChange={setNewTodoTitle}
-          onDescriptionChange={setNewDescription}
-        />
+  render() {
+    const {
+      newTodoTitle,
+      newDescription,
+      allTodos,
+      viewMode,
+      editTask,
+      TaskText,
+    } = this.state;
 
-        <Button onclick={addNewTask} />
+    const todoTasks = allTodos.filter((task) => !task.completed);
+    const completedTasks = allTodos.filter((task) => task.completed);
 
-        </div>
+    return (
+      <div className="App">
+        <h1>My Todos</h1>
 
-        <div className="clear-wrapper">
-          <Clear clear={clearAllTasks}/>
+        <div className="todo-wrapper">
+          <div className="todo-input">
+            <Input
+              valueTitle={newTodoTitle}
+              valueDescription={newDescription}
+              onTitleChange={(value) =>
+                this.setState({ newTodoTitle: value })
+              }
+              onDescriptionChange={(value) =>
+                this.setState({ newDescription: value })
+              }
+            />
 
-          <Switcher 
-          switchToTodo={switchToTodo}      
-          switchToCompleted={switchToCompleted}
-          viewMode={viewMode} />
-        </div>
-  
-        <div className="todo-list">
-          {viewMode === "todo" ? (
+            <Button onclick={this.addNewTask} />
+          </div>
+
+          <div className="clear-wrapper">
+            <Clear clear={this.clearAllTasks} />
+
+            <Switcher
+              switchToTodo={this.switchToTodo}
+              switchToCompleted={this.switchToCompleted}
+              viewMode={viewMode}
+            />
+          </div>
+
+          <div className="todo-list">
+            {viewMode === "todo" ? (
               todoTasks.map((item, index) => (
-              <Todoitem
-              todoTitle={item.title}
-              todoDescription={item.description}
-              deleteTask={deleteTask}
-              id={item.id}
-              taskCompleted={taskCompleted}
-              completed={item.completed}
-
-              toggleEdit={() => toggleEdit(item.id, item.title)}
-              TaskText={item.id === editTask.id ? editTask.text : ""}
-              setTaskText={setTaskText}
-              saveChange={() => saveChange(item.id)}
-              editTask={item.id === editTask.id}
-              isEditing={editTask.id === item.id}
-              />
-            ))
-          ) : (
-            completedTasks.map((item, index) => (
-              <Todoitem
-              todoTitle={item.title}
-              todoDescription={item.description}
-              deleteTask={deleteTask}
-              id={item.id}
-              taskCompleted={taskCompleted}
-              completed={item.completed}
-
-              toggleEdit={() => toggleEdit(item.id, item.title)}
-              TaskText={item.id === editTask.id ? editTask.text : ""}
-              setTaskText={setTaskText}
-              saveChange={() => saveChange(item.id)}
-              editTask={item.id === editTask.id}
-              isEditing={editTask.id === item.id}
-              />
-            ))
-          )}
+                <Todoitem
+                  todoTitle={item.title}
+                  todoDescription={item.description}
+                  deleteTask={this.deleteTask}
+                  id={item.id}
+                  taskCompleted={this.taskCompleted}
+                  completed={item.completed}
+                  toggleEdit={() => this.toggleEdit(item.id, item.title)}
+                  TaskText={
+                    item.id === editTask.id ? editTask.text : ""
+                  }
+                  setTaskText={(value) => this.setState({ TaskText: value })}
+                  saveChange={() => this.saveChange(item.id)}
+                  editTask={item.id === editTask.id}
+                  isEditing={editTask.id === item.id}
+                />
+              ))
+            ) : (
+              completedTasks.map((item, index) => (
+                <Todoitem
+                  todoTitle={item.title}
+                  todoDescription={item.description}
+                  deleteTask={this.deleteTask}
+                  id={item.id}
+                  taskCompleted={this.taskCompleted}
+                  completed={item.completed}
+                  toggleEdit={() => this.toggleEdit(item.id, item.title)}
+                  TaskText={
+                    item.id === editTask.id ? editTask.text : ""
+                  }
+                  setTaskText={(value) => this.setState({ TaskText: value })}
+                  saveChange={() => this.saveChange(item.id)}
+                  editTask={item.id === editTask.id}
+                  isEditing={editTask.id === item.id}
+                />
+              ))
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 }
 
 export default App;
